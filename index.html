@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="https://restfulcountries.com/assets/images/logo/logo-white.png" />
     <title>Country Info</title>
     <link rel="stylesheet" href="styles.css" />
     <script
@@ -12,7 +15,15 @@
   </head>
   <body>
     <header>
-      <h1>Where in the world?</h1>
+      <div class="logo-container">
+        <a href="./index.html">
+          <img
+            class="logo"
+            src="https://restfulcountries.com/assets/images/logo/logo-white.png"
+            alt="Logo" />
+        </a>
+        <h1>Where in the world?</h1>
+      </div>
       <div class="mode" id="dark-mode-toggle">
         <div class="icon dark hidden">
           <i class="fa-solid fa-moon"></i>
@@ -25,9 +36,13 @@
       </div>
     </header>
     <div class="search-container">
-      <input type="text" class="search" placeholder="Search for a country..." />
-      <select class="region-filter">
-        <option value="filter" selected disabled>Filter by Region</option>
+      <input
+        type="search"
+        name="search"
+        class="search"
+        placeholder="Search for a country..." />
+      <select class="region-filter" placeholder="Filter by Reigion">
+        <option value="filter" disabled selected>Filter by Region</option>
         <option value="Africa">Africa</option>
         <option value="Americas">Americas</option>
         <option value="Antarctic">Antarctic</option>
@@ -36,6 +51,12 @@
         <option value="Oceania">Oceania</option>
       </select>
     </div>
+    <div class="toast"></div>
+    <div class="loading-spinner hidden"></div>
+    <button class="scroll-to-top hidden">
+      <h1>↑</h1>
+      Back to Top
+    </button>
     <div class="cards-container"></div>
     <main class="details-content"></main>
   </body>
