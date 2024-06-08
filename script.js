@@ -1,5 +1,7 @@
 "use strict";
+// Event listener to run the script after the DOM has fully loaded
 window.addEventListener("DOMContentLoaded", async () => {
+  // Select necessary elements from the DOM
   const body = document.querySelector("body");
   const cardsContainer = document.querySelector(".cards-container");
   const searchContainer = document.querySelector(".search-container");
@@ -11,7 +13,21 @@ window.addEventListener("DOMContentLoaded", async () => {
   const switchMode = document.querySelector(".mode");
   const dark = document.querySelector(".dark");
   const bright = document.querySelector(".bright");
+  const scrollToTopButton = document.querySelector(".scroll-to-top");
+  const toast = document.querySelector(".toast");
+  const loadingIndicator = document.querySelector(".loading-spinner");
 
+  // Function to show error message
+  const displayErrorMessage = (message) => {
+    toast.innerHTML = message;
+    toast.className = "toast show";
+    toast.style.background = "red";
+    setTimeout(() => {
+      toast.className = toast.className.replace("show", "");
+    }, 3000);
+  };
+
+  // Function to generate HTML for each country card
   const generateCountryHTML = (country) => `
     <div class="card" data-country="${country.cca3}">
       <div class="flag">
@@ -28,10 +44,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     </div>
   `;
 
+  // Helper function to get native name
   const getNativeName = (nativeName) => {
     return nativeName ? Object.values(nativeName)[0].common : "N/A";
   };
 
+  // Helper function to get country currencies
   const getCountryCurrencies = (currencies) => {
     return currencies
       ? Object.values(currencies)
@@ -40,11 +58,22 @@ window.addEventListener("DOMContentLoaded", async () => {
       : "N/A";
   };
 
+  // Helper function to get country languages
   const getCountryLanguages = (language) => {
     return Object.values(language).join(", ");
   };
 
-  const generateCountryDetailsHTML = (country) => `
+  // Helper function to get names of border countries
+  const getBorderCountryNames = (borderCodes, data) => {
+    if (!borderCodes) return "N/A";
+    const borderCountries = data.filter((country) =>
+      borderCodes.includes(country.cca3)
+    );
+    return borderCountries.map((country) => country.name.common).join(", ");
+  };
+
+  // Function to generate HTML for country details
+  const generateCountryDetailsHTML = (country, data) => `
     <button class="btn-back">← Back</button>
     <div class="country-details">
       <div class="country-flag">
@@ -73,64 +102,89 @@ window.addEventListener("DOMContentLoaded", async () => {
           )}</p>
         </div>
         <div class="border-countries">
-          <p><strong>Border Countries:</strong> ${
-            country.borders ? country.borders.join(", ") : "N/A"
-          }</p>
+          <p><strong>Border Countries:</strong> ${getBorderCountryNames(
+            country.borders,
+            data
+          )}</p>
         </div>
       </div>
     </div>
   `;
 
+  // Function to fetch all countries data from the API
   const fetchCountries = async () => {
     const url = `https://restcountries.com/v3.1/all`;
     try {
+      // Show loading indicator
+      loadingIndicator.classList.remove("hidden");
+
+      // Fetch data from API
       const response = await fetch(url);
       if (!response.ok) throw new Error(response.status);
+
+      // Parse response to JSON
       const data = await response.json();
       data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+
+      // Display country cards
       displayCountries(data);
 
-      // Add event listeners for filtering and searching
+      // Set up event listeners for region filter and search input
       regionFilter.addEventListener("change", () =>
         filterCountriesByRegion(data)
       );
-      search.addEventListener("input", () => filterCountriesByName(data));
+      search.addEventListener(
+        "input",
+        debounce(() => filterCountriesByName(data), 300)
+      );
 
-      // Add click event listeners to each card
+      // Event listener for country card click to display details
       cardsContainer.addEventListener("click", (e) => {
         const card = e.target.closest(".card");
         if (card) {
           const countryCode = card.getAttribute("data-country");
           const country = data.find((c) => c.cca3 === countryCode);
-          displayCountryDetails(country);
+          displayCountryDetails(country, data);
           searchContainer.style.display = "none";
         }
       });
 
-      // Add event listener for the back button
+      // Event listener for back button in country details
       detailsContent.addEventListener("click", (e) => {
         if (e.target.classList.contains("btn-back")) {
           detailsContent.innerHTML = "";
           displayCountries(data);
           searchContainer.style.display = "flex";
+          scrollToTopButton.classList.remove("hidden");
+          body.style.overflowY = "hidden";
         }
       });
     } catch (err) {
-      alert(err.message);
+      displayErrorMessage(
+        `<p>Error: ${err.message}<br />Check Network.<br />Please Reload.</p>`
+      );
+    } finally {
+      // Hide loading indicator
+      loadingIndicator.classList.add("hidden");
     }
   };
 
+  // Function to display country cards
   const displayCountries = (countries) => {
     const htmlStrings = countries.map(generateCountryHTML).join("\n");
     cardsContainer.innerHTML = htmlStrings;
   };
 
-  const displayCountryDetails = (country) => {
-    const htmlString = generateCountryDetailsHTML(country);
+  // Function to display country details
+  const displayCountryDetails = (country, data) => {
+    const htmlString = generateCountryDetailsHTML(country, data);
     detailsContent.innerHTML = htmlString;
     cardsContainer.innerHTML = "";
+    body.style.overflowY = "auto";
+    scrollToTopButton.classList.add("hidden");
   };
 
+  // Function to filter countries by region
   const filterCountriesByRegion = (data) => {
     const region = regionFilter.value;
     if (!region) return displayCountries(data);
@@ -140,6 +194,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     displayCountries(filteredCountries);
   };
 
+  // Function to filter countries by name
   const filterCountriesByName = (data) => {
     const countryName = search.value.toLowerCase();
     if (!countryName) return displayCountries(data);
@@ -150,6 +205,35 @@ window.addEventListener("DOMContentLoaded", async () => {
     displayCountries(filteredCountries);
   };
 
+  // Debounce function to delay the execution of a function
+  const debounce = (func, delay) => {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+  };
+
+  // Intersection observer callback to show the scroll-to-top button
+  const callback = (entries) => {
+    const [entry] = entries;
+    if (!entry.isIntersecting) return;
+    scrollToTopButton.classList.remove("hidden");
+  };
+
+  // Initialize intersection observer
+  const cardsObs = new IntersectionObserver(callback, {
+    root: null,
+    threshold: 0.1,
+  });
+  cardsObs.observe(cardsContainer);
+
+  // Event listener for scroll-to-top button
+  scrollToTopButton.addEventListener("click", () => {
+    cardsContainer.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // Function to update the mode of country cards
   const updateCardMode = () => {
     const cards = document.querySelectorAll(".card");
     cards.forEach((card) => {
@@ -161,15 +245,24 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   };
 
+  // Fetch and display countries when the script runs
   await fetchCountries();
 
+  // Function to toggle light mode
+  const lightMode = (content) => {
+    content.classList.toggle("light-mode");
+  };
+
+  // Event listener for mode switch
   switchMode.addEventListener("click", () => {
-    body.classList.toggle("light-mode");
-    search.classList.toggle("for-input");
-    regionFilter.classList.toggle("for-input");
-    header.classList.toggle("light-mode");
-    modeText.classList.toggle("light-mode");
-    updateCardMode(); // Ensure cards are updated when mode is toggled
+    lightMode(body);
+    lightMode(search);
+    lightMode(regionFilter);
+    lightMode(scrollToTopButton);
+    lightMode(header);
+    lightMode(scrollToTopButton);
+    lightMode(modeText);
+    updateCardMode();
     dark.classList.toggle("hidden");
     bright.classList.toggle("hidden");
   });

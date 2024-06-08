@@ -16,12 +16,15 @@
 }
 
 body {
+  position: relative;
   font-family: "Nunito Sans", sans-serif;
   background-color: var(--dark-mode-background);
   color: var(--dark-mode-text-light-mode-elements);
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
+  overflow-y: hidden;
+  height: 100vh;
 }
 
 header {
@@ -35,6 +38,20 @@ header {
 
 h1 {
   margin: 0;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 50%;
+  object-position: center;
+  margin-right: 20px;
 }
 
 #dark-mode-toggle {
@@ -59,20 +76,26 @@ h1 {
   width: 20%;
   padding: 10px;
   border: none;
-  border-radius: 5px;
-  margin: 0 19px;
+  margin: 0 20px;
   background: var(--dark-mode-elements);
   color: var(--dark-mode-text-light-mode-elements);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.61);
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 10px;
 }
 
 .region-filter {
   width: 20%;
   padding: 10px;
   border: none;
-  border-radius: 5px;
-  margin: 0 19px;
+  margin: 0 20px;
   background: var(--dark-mode-elements);
   color: var(--dark-mode-text-light-mode-elements);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.61);
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 10px;
 }
 
 .cards-container {
@@ -81,7 +104,7 @@ h1 {
   flex-wrap: wrap;
   justify-content: center;
   padding: 20px;
-  max-height: calc(100vh - 160px); /* Adjust as needed */
+  max-height: calc(100vh - 160px);
   overflow-y: auto;
   gap: 20px;
 }
@@ -147,10 +170,6 @@ h1 {
   font-size: 0.9em;
 }
 
-.hidden {
-  display: none;
-}
-
 .fa-moon {
   color: var(--light-mode-text);
 }
@@ -196,6 +215,14 @@ h1 {
   .search-container {
     flex-direction: column;
     align-items: center;
+  }
+
+  .icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
   }
 }
 
@@ -341,5 +368,117 @@ h1 {
 
   .country-name {
     font-size: 24px;
+  }
+}
+
+.scroll-to-top {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: var(--dark-mode-elements);
+  color: var(--dark-mode-text-light-mode-elements);
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.733);
+  cursor: pointer;
+  z-index: 10;
+  font-weight: 700;
+}
+
+.light-mode .scroll-to-top {
+  background-color: var(--dark-mode-text-light-mode-elements);
+  color: var(--light-mode-text);
+}
+
+.hidden {
+  display: none;
+}
+
+.toast {
+  visibility: hidden;
+  min-width: 250px;
+  margin-left: -125px;
+  color: #fff;
+  text-align: center;
+  border-radius: 2px;
+  padding: 16px;
+  position: fixed;
+  z-index: 1;
+  left: 50%;
+  bottom: 30px;
+  font-size: 17px;
+}
+
+.toast.show {
+  visibility: visible;
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@-webkit-keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+.loading-spinner {
+  position: absolute;
+  z-index: 999;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px;
+  border: 8px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 8px solid #3498db;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
