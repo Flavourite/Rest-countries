@@ -155,8 +155,7 @@ window.addEventListener("DOMContentLoaded", async () => {
           detailsContent.innerHTML = "";
           displayCountries(data);
           searchContainer.style.display = "flex";
-          scrollToTopButton.classList.remove("hidden");
-          body.style.overflowY = "hidden";
+          scrollToTopButton.style.opacity = "1";
         }
       });
     } catch (err) {
@@ -180,8 +179,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const htmlString = generateCountryDetailsHTML(country, data);
     detailsContent.innerHTML = htmlString;
     cardsContainer.innerHTML = "";
-    body.style.overflowY = "auto";
-    scrollToTopButton.classList.add("hidden");
+    scrollToTopButton.style.opacity = "0";
   };
 
   // Function to filter countries by region
