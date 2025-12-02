@@ -3,6 +3,7 @@
 This project fetches data from the [REST Countries API](https://restcountries.com) and displays it in a responsive web layout. It includes functionalities such as searching for a country, filtering by region, and toggling dark mode.
 
 ## Table of Contents
+
 - [Demo](#demo)
 - [Features](#features)
 - [Installation](#installation)
@@ -39,6 +40,13 @@ git clone https://github.com/Flavourite/Rest-countries.git
 3. Use the region filter dropdown to filter countries by region.
 
 4. Click the "Dark Mode" button to toggle between light and dark themes.
+
+### Initial Logo (Flag) Behavior
+
+- On initial page load the site attempts to detect your country and set the header logo (and favicon) to your country's flag.
+- Detection priority: IP-based geolocation via https://ipapi.co/json → `navigator.language` (e.g. "en-US") → fallback to the United States (US).
+- You can change or disable this behavior in `script.js` by editing the `detectUserCountry` function and the geolocation endpoint.
+- You can disable auto-detection by setting `config.enableAutoFlag = false` in `script.js`.
 
 ## Project Structure
 
