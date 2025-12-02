@@ -16,6 +16,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   const scrollToTopButton = document.querySelector(".scroll-to-top");
   const toast = document.querySelector(".toast");
   const loadingIndicator = document.querySelector(".loading-spinner");
+  const logoImg = document.querySelector(".logo");
+
+  // Store the original logo URL
+  const originalLogoUrl = "https://restfulcountries.com/assets/images/logo/logo-white.png";
 
   // Function to show error message
   const displayErrorMessage = (message) => {
@@ -27,49 +31,57 @@ window.addEventListener("DOMContentLoaded", async () => {
     }, 3000);
   };
 
+  // Function to update the site logo to a country flag
+  const updateSiteLogo = (country) => {
+    if (country && country.flags && country.flags.png) {
+      logoImg.src = country.flags.png;
+      logoImg.alt = `${country.name} Flag`;
+    } else {
+      // Reset to original logo if no country is provided
+      logoImg.src = originalLogoUrl;
+      logoImg.alt = "Logo";
+    }
+  };
+
   // Function to generate HTML for each country card
   const generateCountryHTML = (country) => `
-    <div class="card" data-country="${country.cca3}">
+    <div class="card" data-country="${country.alpha3Code}">
       <div class="flag">
-        <img src="${country.flags.png}" alt="${country.flags.alt}" />
+        <img src="${country.flags.png}" alt="${country.name}" />
       </div>
       <div class="part-info">
-        <h2>${country.name.common}</h2>
+        <h2>${country.name}</h2>
         <p><strong>Population:</strong> ${country.population.toLocaleString()}</p>
         <p><strong>Region:</strong> ${country.region}</p>
-        <p><strong>Capital:</strong> ${
-          country.capital ? country.capital[0] : "N/A"
-        }</p>
+        <p><strong>Capital:</strong> ${country.capital || "N/A"}</p>
       </div>
     </div>
   `;
 
   // Helper function to get native name
-  const getNativeName = (nativeName) => {
-    return nativeName ? Object.values(nativeName)[0].common : "N/A";
+  const getNativeName = (country) => {
+    return country.nativeName || "N/A";
   };
 
   // Helper function to get country currencies
   const getCountryCurrencies = (currencies) => {
     return currencies
-      ? Object.values(currencies)
-          .map((curr) => curr.name)
-          .join(", ")
+      ? currencies.map((curr) => curr.name).join(", ")
       : "N/A";
   };
 
   // Helper function to get country languages
-  const getCountryLanguages = (language) => {
-    return Object.values(language).join(", ");
+  const getCountryLanguages = (languages) => {
+    return languages ? languages.map(lang => lang.name).join(", ") : "N/A";
   };
 
   // Helper function to get names of border countries
   const getBorderCountryNames = (borderCodes, data) => {
     if (!borderCodes) return "N/A";
     const borderCountries = data.filter((country) =>
-      borderCodes.includes(country.cca3)
+      borderCodes.includes(country.alpha3Code)
     );
-    return borderCountries.map((country) => country.name.common).join(", ");
+    return borderCountries.map((country) => country.name).join(", ");
   };
 
   // Function to generate HTML for country details
@@ -77,35 +89,22 @@ window.addEventListener("DOMContentLoaded", async () => {
     <button class="btn-back">← Back</button>
     <div class="country-details">
       <div class="country-flag">
-        <img src="${country.flags.png}" alt="${country.flags.alt}" />
+        <img src="${country.flags.png}" alt="${country.name}" />
       </div>
       <div class="country-info">
-        <h2 class="country-name">${country.name.official}</h2>
+        <h2 class="country-name">${country.name}</h2>
         <div class="details">
-          <p><strong>Native Name:</strong> ${getNativeName(
-            country.name.nativeName
-          )}</p>
+          <p><strong>Native Name:</strong> ${getNativeName(country)}</p>
           <p><strong>Population:</strong> ${country.population.toLocaleString()}</p>
           <p><strong>Region:</strong> ${country.region}</p>
-          <p><strong>Sub Region:</strong> ${country.subregion}</p>
-          <p><strong>Capital:</strong> ${
-            country.capital ? country.capital[0] : "N/A"
-          }</p>
-          <p><strong>Top Level Domain:</strong> ${
-            country.tld ? country.tld[0] : "N/A"
-          }</p>
-          <p><strong>Currencies:</strong> ${getCountryCurrencies(
-            country.currencies
-          )}</p>
-          <p><strong>Languages:</strong> ${getCountryLanguages(
-            country.languages
-          )}</p>
+          <p><strong>Sub Region:</strong> ${country.subregion || "N/A"}</p>
+          <p><strong>Capital:</strong> ${country.capital || "N/A"}</p>
+          <p><strong>Top Level Domain:</strong> ${country.topLevelDomain ? country.topLevelDomain[0] : "N/A"}</p>
+          <p><strong>Currencies:</strong> ${getCountryCurrencies(country.currencies)}</p>
+          <p><strong>Languages:</strong> ${getCountryLanguages(country.languages)}</p>
         </div>
         <div class="border-countries">
-          <p><strong>Border Countries:</strong> ${getBorderCountryNames(
-            country.borders,
-            data
-          )}</p>
+          <p><strong>Border Countries:</strong> ${getBorderCountryNames(country.borders, data)}</p>
         </div>
       </div>
     </div>
@@ -113,7 +112,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Function to fetch all countries data from the API
   const fetchCountries = async () => {
-    const url = `https://restcountries.com/v3.1/all`;
+    const url = `data.json`;
     try {
       // Show loading indicator
       loadingIndicator.classList.remove("hidden");
@@ -124,7 +123,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
       // Parse response to JSON
       const data = await response.json();
-      data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+      data.sort((a, b) => a.name.localeCompare(b.name));
 
       // Display country cards
       displayCountries(data);
@@ -143,8 +142,9 @@ window.addEventListener("DOMContentLoaded", async () => {
         const card = e.target.closest(".card");
         if (card) {
           const countryCode = card.getAttribute("data-country");
-          const country = data.find((c) => c.cca3 === countryCode);
+          const country = data.find((c) => c.alpha3Code === countryCode);
           displayCountryDetails(country, data);
+          updateSiteLogo(country); // Update logo to current country flag
           searchContainer.style.display = "none";
         }
       });
@@ -154,6 +154,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         if (e.target.classList.contains("btn-back")) {
           detailsContent.innerHTML = "";
           displayCountries(data);
+          updateSiteLogo(null); // Reset logo to original
           searchContainer.style.display = "flex";
           scrollToTopButton.style.opacity = "1";
         }
@@ -185,7 +186,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Function to filter countries by region
   const filterCountriesByRegion = (data) => {
     const region = regionFilter.value;
-    if (!region) return displayCountries(data);
+    if (!region || region === "filter") return displayCountries(data);
     const filteredCountries = data.filter(
       (country) => country.region === region
     );
@@ -197,7 +198,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const countryName = search.value.toLowerCase();
     if (!countryName) return displayCountries(data);
     const filteredCountries = data.filter((country) =>
-      country.name.common.toLowerCase().includes(countryName)
+      country.name.toLowerCase().includes(countryName)
     );
     regionFilter.value = "filter";
     displayCountries(filteredCountries);
